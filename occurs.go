@@ -45,7 +45,6 @@ func main() {
 				fmt.Fprintf(os.Stderr, "Skipping %q because of error: %v\n", arg, err)
 				continue
 			}
-			defer file.Close()
 
 			readers = append(readers, file)
 		}
