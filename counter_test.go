@@ -2,6 +2,7 @@ package main_test
 
 import (
 	occurs "."
+	"io"
 	"reflect"
 	"strings"
 	"testing"
@@ -29,13 +30,6 @@ func TestCounter(t *testing.T) {
 		SkipEmpty: true,
 	}
 
-	for i, data := range testData {
-		err := c.Count(strings.NewReader(data))
-		if err != nil {
-			t.Fatalf("Error when counting %v: %v", i, err)
-		}
-	}
-
 	expected := map[string]int{
 		"this": 2,
 		"is":   2,
@@ -43,11 +37,32 @@ func TestCounter(t *testing.T) {
 		"test": 1,
 		"so":   1,
 	}
+	t.Logf("Expecting: %q", expected)
 
-	t.Logf("%q", c.Lines)
-	t.Logf("%q", expected)
+	for i, data := range testData {
+		err := c.Count(strings.NewReader(data))
+		if err != nil {
+			t.Fatalf("Error when counting %v: %v", i, err)
+		}
+	}
+
+	t.Logf("Sequential: %q", c.Lines)
 
 	if !reflect.DeepEqual(c.Lines, expected) {
-		t.Fatalf("%q != %q", c.Lines, expected)
+		t.Fatalf("Sequential: %q != %q", c.Lines, expected)
+	}
+
+	c.Lines = nil
+
+	readers := make([]io.Reader, 0, len(testData))
+	for _, data := range testData {
+		readers = append(readers, strings.NewReader(data))
+	}
+	c.ParallelCount(readers...)
+
+	t.Logf("Parallel: %q", c.Lines)
+
+	if !reflect.DeepEqual(c.Lines, expected) {
+		t.Fatalf("Parallel: %q != %q", c.Lines, expected)
 	}
 }
