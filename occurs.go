@@ -13,7 +13,7 @@ func main() {
 	ts := flag.Bool("ts", false, "Trim whitespace from lines.")
 	ic := flag.Bool("ic", false, "Ignore case. (All lines will be converted to lower case.)")
 	se := flag.Bool("se", false, "Ignore empty lines.")
-	p := flag.Bool("p", false, "Do counting in parallel.")
+	p := flag.Bool("p", false, "Do counting in parallel. (This causes all files to be opened at once.)")
 	flag.Parse()
 
 	filters := make(Filters, 0, 2)
@@ -29,14 +29,41 @@ func main() {
 		SkipEmpty: *se,
 	}
 
-	var readers []io.Reader
-	if nargs := flag.NArg(); nargs == 0 {
-		readers = []io.Reader{os.Stdin}
+	if *p {
+		var readers []io.Reader
+		if nargs := flag.NArg(); nargs == 0 {
+			readers = []io.Reader{os.Stdin}
+		} else {
+			readers = make([]io.Reader, 0, nargs)
+			for _, arg := range flag.Args() {
+				if arg == "-" {
+					readers = append(readers, os.Stdin)
+					continue
+				}
+
+				file, err := os.Open(arg)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Skipping %q because of error: %v\n", arg, err)
+					continue
+				}
+
+				readers = append(readers, file)
+			}
+		}
+
+		c.ParallelCount(readers...)
 	} else {
-		readers = make([]io.Reader, 0, nargs)
-		for _, arg := range flag.Args() {
+		args := flag.Args()
+		if len(args) == 0 {
+			args = []string{"-"}
+		}
+
+		for _, arg := range args {
 			if arg == "-" {
-				readers = append(readers, os.Stdin)
+				err := c.Count(os.Stdin)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Error while counting from stdin: %v\n", err)
+				}
 				continue
 			}
 
@@ -46,18 +73,12 @@ func main() {
 				continue
 			}
 
-			readers = append(readers, file)
-		}
-	}
-
-	if *p {
-		c.ParallelCount(readers...)
-	} else {
-		for _, r := range readers {
-			err := c.Count(r)
+			err = c.Count(file)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error while counting: %v\n", err)
+				fmt.Fprintf(os.Stderr, "Error occured while counting from %q: %v\n", arg, err)
 			}
+
+			file.Close()
 		}
 	}
 
