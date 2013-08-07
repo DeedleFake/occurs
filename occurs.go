@@ -2,6 +2,7 @@
 // lines occur in a given set of files. For example, given the files
 //
 //	example1.txt
+//
 //	this
 //	is
 //	an
@@ -10,6 +11,7 @@
 // and
 //
 //	example2.txt
+//
 //	this
 //	is
 //	also
