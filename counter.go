@@ -6,8 +6,12 @@ import (
 	"sync"
 )
 
+// A Counter is used for counting lines. To reset the counter, simply
+// set Lines to nil. The zero value for a counter is usable.
 type Counter struct {
-	Lines map[string]int
+	// Lines is a map of the lines. The key for the map is the line, and
+	// the value is the number of times that that line has occured.
+	Lines map[string]uint
 
 	Filters   Filters
 	SkipEmpty bool
@@ -15,7 +19,7 @@ type Counter struct {
 
 func (c *Counter) init() {
 	if c.Lines == nil {
-		c.Lines = make(map[string]int)
+		c.Lines = make(map[string]uint)
 	}
 }
 

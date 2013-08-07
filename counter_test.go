@@ -30,7 +30,7 @@ func TestCounter(t *testing.T) {
 		SkipEmpty: true,
 	}
 
-	expected := map[string]int{
+	expected := map[string]uint{
 		"this": 2,
 		"is":   2,
 		"a":    1,
