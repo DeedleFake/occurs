@@ -119,7 +119,7 @@ var (
 	ic = flag.Bool("ic", false, "Ignore case. (All lines will be converted to lower case.)")
 	se = flag.Bool("se", false, "Ignore empty lines.")
 
-	p = flag.Bool("p", false, "Do counting in parallel. (This causes all files to be opened at once.)")
+	seq = flag.Bool("seq", false, "Count files sequentially, rather than in parallel.")
 
 	cols = flag.Bool("cols", false, "Output in nicely aligned columns.")
 )
@@ -140,10 +140,10 @@ func main() {
 		SkipEmpty: *se,
 	}
 
-	if *p {
-		countParallel()
-	} else {
+	if *seq {
 		countSeq()
+	} else {
+		countParallel()
 	}
 
 	if *cols {
