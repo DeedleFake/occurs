@@ -19,9 +19,7 @@ func (c *Counter) init() {
 	}
 }
 
-func (c *Counter) Count(r io.Reader) error {
-	c.init()
-
+func (c *Counter) lowerCount(r io.Reader, f func(string)) error {
 	s := bufio.NewScanner(r)
 	for s.Scan() {
 		line := c.Filters.Filter(s.Text())
@@ -29,13 +27,18 @@ func (c *Counter) Count(r io.Reader) error {
 			continue
 		}
 
-		c.Lines[line]++
-	}
-	if err := s.Err(); err != nil {
-		return err
+		f(line)
 	}
 
-	return nil
+	return s.Err()
+}
+
+func (c *Counter) Count(r io.Reader) error {
+	c.init()
+
+	return c.lowerCount(r, func(line string) {
+		c.Lines[line]++
+	})
 }
 
 func (c *Counter) ParallelCount(r ...io.Reader) {
@@ -58,15 +61,9 @@ func (c *Counter) ParallelCount(r ...io.Reader) {
 		go func(r io.Reader) {
 			defer wg.Done()
 
-			s := bufio.NewScanner(r)
-			for s.Scan() {
-				line := c.Filters.Filter(s.Text())
-				if c.SkipEmpty && (line == "") {
-					continue
-				}
-
+			c.lowerCount(r, func(line string) {
 				lineC <- line
-			}
+			})
 		}(r)
 	}
 	wg.Wait()
