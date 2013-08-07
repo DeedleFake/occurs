@@ -10,10 +10,15 @@ import (
 // set Lines to nil. The zero value for a counter is usable.
 type Counter struct {
 	// Lines is a map of the lines. The key for the map is the line, and
-	// the value is the number of times that that line has occured.
+	// the value is the number of times that that line has occurred.
 	Lines map[string]uint
 
-	Filters   Filters
+	// Filters is a list of Filterers to use to filter lines.
+	Filters Filters
+
+	// If SkipEmpty is true empty lines are not counted. This is checked
+	// after the Filters are run, so if this is true and the Filters
+	// output an empty line, the line is ignored.
 	SkipEmpty bool
 }
 
@@ -37,6 +42,9 @@ func (c *Counter) lowerCount(r io.Reader, f func(string)) error {
 	return s.Err()
 }
 
+// Count reads from r until it encounters an error, counting all the
+// lines it reads. It returns the error encountered, unless the error
+// is io.EOF.
 func (c *Counter) Count(r io.Reader) error {
 	c.init()
 
@@ -45,6 +53,11 @@ func (c *Counter) Count(r io.Reader) error {
 	})
 }
 
+// ParallelCount counts from all the io.Readers in r in parallel.
+// Because of the nature of this method it does not return an error,
+// even if one is encountered. This method is not asynchronous, and
+// does not return until it has finished counting from all the
+// io.Readers.
 func (c *Counter) ParallelCount(r ...io.Reader) {
 	c.init()
 

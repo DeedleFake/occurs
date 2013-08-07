@@ -1,3 +1,51 @@
+// occurs is a simple program which counts the number of times unique
+// lines occur in a given set of files. For example, given the files
+//
+//	example1.txt
+//	this
+//	is
+//	an
+//	example
+//
+// and
+//
+//	example2.txt
+//	this
+//	is
+//	also
+//	an
+//	example
+//
+// running
+//
+//	occurs example1.txt example2.txt
+//
+// will output
+//
+//	2 this
+//	2 is
+//	2 an
+//	1 also
+//	2 example
+//
+// Note that the order of the output lines is unspecified, and may
+// output in a different order when run on the same files multiple
+// times. To enforce an order to the output, you can pipe the output
+// into another program. For example, the Unix sort command; running
+//
+//	occurs example1.txt example2.txt | sort -nk1
+//
+// will output
+//
+//	1 also
+//	2 an
+//	2 example
+//	2 is
+//	2 this
+//
+// For information on which options are available, run
+//
+//	occurs --help
 package main
 
 import (
